@@ -1,9 +1,9 @@
 import {
+    APIEmbed,
     Client,
     GuildTextBasedChannel,
     Message,
-    MessageEmbed,
-    Permissions,
+    PermissionFlagsBits,
 } from 'discord.js';
 
 function isProperMatch(match: RegExpMatchArray): match is {
@@ -35,12 +35,12 @@ export default function expand(client: Client<true>, message: Message) {
         if (!channel)
             throw new Error(`channel <#${match.groups.channel}> not found.`);
 
-        if (!(channel.isText() || channel.isThread()))
+        if (!channel.isTextBased())
             throw new Error(`\`${channel}\` is not a text channel.`);
 
         let allowed = channel
             .permissionsFor(client.user)
-            ?.has(Permissions.FLAGS.READ_MESSAGE_HISTORY);
+            ?.has(PermissionFlagsBits.ReadMessageHistory);
         if (!allowed)
             throw new Error(
                 `I didn't have permission to see \n\`${match[0]}\`.\nI could not expand it.`
@@ -53,7 +53,7 @@ export default function expand(client: Client<true>, message: Message) {
         channel,
         { member, author, content, createdAt, attachments, embeds },
     ]: [GuildTextBasedChannel, Message]) {
-        let embed = new MessageEmbed({
+        let embed: APIEmbed = {
             author: {
                 name: member ? member.displayName : author.username,
                 icon_url: (member ?? author).displayAvatarURL(),
@@ -67,7 +67,7 @@ export default function expand(client: Client<true>, message: Message) {
                       })`
                     : ''
             }`,
-            timestamp: createdAt,
+            timestamp: createdAt.toISOString(),
             footer: {
                 text:
                     (channel.parent?.parent
@@ -77,10 +77,13 @@ export default function expand(client: Client<true>, message: Message) {
                     channel.name,
                 icon_url: message.guild?.iconURL() ?? undefined,
             },
-            image: {
-                url: attachments.find((att) => !!att.width)?.url,
-            },
-        });
+            image: attachments.find((att) => !!att.width)?.url
+                ? {
+                    // The above condition ensures url to be string
+                    url: attachments.find((att) => !!att.width)?.url!,
+                }
+                : undefined,
+        };
 
         return [embed, ...embeds];
     }
@@ -90,7 +93,7 @@ export default function expand(client: Client<true>, message: Message) {
             .then(createEmbeds)
             .then((embeds) => message.channel.send({
                 embeds,
-                allowedMentions:{
+                allowedMentions: {
                     repliedUser: false
                 },
                 reply: {

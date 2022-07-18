@@ -1,11 +1,15 @@
-import { Client, Intents } from 'discord.js';
+import { Client, GatewayIntentBits } from 'discord.js';
 import env from './env';
 import expand from './expand';
 
 const { BOT_TOKEN } = env;
 
 const client = new Client({
-    intents: [Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILDS],
+    intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.MessageContent
+    ],
 });
 
 const regurl =
@@ -18,7 +22,7 @@ client.on('ready', (client) => {
 client.on('messageCreate', (message) => {
     if (message.author.bot) return;
     let urls = [...message.content.matchAll(regurl)];
-    if (!urls) return;
+    if (urls.length === 0) return;
 
     urls.forEach(expand(client, message));
 });
