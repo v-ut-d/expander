@@ -9,7 +9,7 @@ const client = new Client({
 });
 
 const regurl =
-    /https:\/\/(ptb\.|canary\.)?discord(app)?\.com\/channels\/(?<guild>\d{18})\/(?<channel>\d{18})\/(?<message>\d{18})/g;
+    /https:\/\/(ptb\.|canary\.)?discord(app)?\.com\/channels\/(?<guild>\d{18,19})\/(?<channel>\d{18,19})\/(?<message>\d{18,19})/g;
 
 client.on('ready', (client) => {
     console.log(`Logged in as ${client.user.tag}!`);
